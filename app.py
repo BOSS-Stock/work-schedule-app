@@ -26,6 +26,9 @@ SHIFT_OPTIONS = [
     "ปิดสต็อก"
 ]
 
+# รายชื่อคอลัมน์วันทั้งหมด
+DAYS_COLS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
 # ข้อมูลตารางงานเริ่มต้น (สำรอง)
 DEFAULT_DATA = [
     {"Name": "บอส", "Mon": "09.30", "Tue": "09.30", "Wed": "OFF", "Thu": "09.30", "Fri": "09.30", "Sat": "12.30", "Sun": "OFF"},
@@ -33,22 +36,35 @@ DEFAULT_DATA = [
 ]
 
 def style_bg_only(val):
-    """กำหนดสีโทนพาสเทลตามรูปที่ 2"""
-    if val == "09.30":
+    """กำหนดสีโทนพาสเทลตามกะงาน"""
+    val_str = str(val).strip()
+    if val_str in ["09.30", "9.30"]:
         return "background-color: #e8f5e9; color: #1b5e20; font-weight: bold;"  # เขียวพาสเทล
-    elif val in ["12.30", "13.00"]:
+    elif val_str in ["12.30", "13.00", "13.0"]:
         return "background-color: #fffde7; color: #f57f17; font-weight: bold;"  # เหลืองพาสเทล
-    elif val == "OFF":
+    elif val_str == "OFF":
         return "background-color: #ffebee; color: #b71c1c; font-weight: bold;"  # แดงพาสเทล
-    elif val == "ปิดสต็อก":
+    elif val_str == "ปิดสต็อก":
         return "background-color: #e3f2fd; color: #0d47a1; font-weight: bold;"  # ฟ้า/น้ำเงินพาสเทล
     return ""
+
+def clean_dataframe_types(df):
+    """แปลงคอลัมน์วันให้เป็นข้อความ (String) ทั้งหมด ป้องกันการแปลงเป็นตัวเลข Float"""
+    for col in DAYS_COLS:
+        if col in df.columns:
+            df[col] = df[col].astype(str).str.strip()
+            # ปรับกรณีหลุดเป็นเลขทศนิยมให้กลับมาเป็นฟอร์แมตเดิม
+            df[col] = df[col].replace({"9.3": "09.30", "9.300000": "09.30", "13.0": "13.00", "13.000000": "13.00", "12.3": "12.30", "12.300000": "12.30"})
+    return df
 
 def save_data(df):
     """ฟังก์ชันบันทึกข้อมูลตารางงานกลับไปยัง GitHub Gist"""
     if not GIST_ID or not GITHUB_TOKEN:
         st.warning("⚠️ ยังไม่ได้ตั้งค่า GIST_ID หรือ GITHUB_TOKEN ใน Secrets")
         return False
+    
+    # ทำความสะอาดประเภทข้อมูลก่อนบันทึก
+    df = clean_dataframe_types(df)
     
     url = f"https://api.github.com/gists/{GIST_ID}"
     headers = {
@@ -76,7 +92,8 @@ def save_data(df):
 def load_data():
     """ฟังก์ชันดึงข้อมูลตารางงานจาก GitHub Gist"""
     if not GIST_ID:
-        return pd.DataFrame(DEFAULT_DATA)
+        df_default = pd.DataFrame(DEFAULT_DATA)
+        return clean_dataframe_types(df_default)
     
     url = f"https://api.github.com/gists/{GIST_ID}"
     headers = {}
@@ -92,18 +109,22 @@ def load_data():
                 if not content or content == "[]":
                     df_default = pd.DataFrame(DEFAULT_DATA)
                     save_data(df_default)
-                    return df_default
-                return pd.read_json(io.StringIO(content))
+                    return clean_dataframe_types(df_default)
+                
+                # บังคับอ่านคอลัมน์เป็น dtype=str ทั้งหมด
+                df = pd.read_json(io.StringIO(content), dtype=str)
+                return clean_dataframe_types(df)
             else:
                 df_default = pd.DataFrame(DEFAULT_DATA)
                 save_data(df_default)
-                return df_default
+                return clean_dataframe_types(df_default)
         else:
             st.error(f"ไม่สามารถดึงข้อมูลจาก GitHub ได้ (Status Code: {res.status_code})")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการโหลดข้อมูล: {e}")
         
-    return pd.DataFrame(DEFAULT_DATA)
+    df_default = pd.DataFrame(DEFAULT_DATA)
+    return clean_dataframe_types(df_default)
 
 # โหลดข้อมูลตารางงาน
 df_schedule = load_data()
@@ -111,8 +132,7 @@ df_schedule = load_data()
 # ส่วนแสดงผลตารางงานสำหรับทุกคน
 st.subheader("📋 ตารางกะงานปัจจุบัน")
 
-days_cols = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-valid_days = [col for col in days_cols if col in df_schedule.columns]
+valid_days = [col for col in DAYS_COLS if col in df_schedule.columns]
 
 # แสดงสีตามสไตล์พาสเทล
 try:
