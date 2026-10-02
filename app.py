@@ -10,26 +10,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS สำหรับปรับหัวตาราง (Header) ให้ตัวหนังสือเข้มและเด่นชัด
-st.markdown("""
-<style>
-    /* ปรับแต่งหัวตารางของ st.dataframe และ st.data_editor */
-    th[data-testid="stTableHttpHeaderCell"], 
-    div[data-testid="stHeaderCell"] span,
-    th div {
-        color: #000000 !important;
-        font-weight: 800 !important;
-        font-size: 16px !important;
-    }
-    
-    /* ปรับพื้นหลังส่วนหัวตารางให้เข้มขึ้นเล็กน้อย */
-    div[data-testid="stHeaderCell"] {
-        background-color: #e0e0e0 !important;
-        border-bottom: 2px solid #999999 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
 st.title("📅 ตารางทำงานประจำสัปดาห์ (Weekly Roster)")
 st.caption("ระบบดึงข้อมูลและอัปเดตตารางงานผ่าน GitHub")
 
@@ -55,8 +35,8 @@ DEFAULT_DATA = [
     {"Name": "MIN", "Mon": "OFF", "Tue": "13.00", "Wed": "13.00", "Thu": "13.00", "Fri": "OFF", "Sat": "13.00", "Sun": "12.30"}
 ]
 
-def style_bg_only(val):
-    """กำหนดสีโทนพาสเทลตามกะงาน"""
+def get_shift_style(val):
+    """ส่งคืนสไตล์ Inline CSS สีพาสเทลตามกะงาน"""
     val_str = str(val).strip()
     if val_str in ["09.30", "9.30"]:
         return "background-color: #e8f5e9; color: #1b5e20; font-weight: bold;"  # เขียวพาสเทล
@@ -66,7 +46,78 @@ def style_bg_only(val):
         return "background-color: #ffebee; color: #b71c1c; font-weight: bold;"  # แดงพาสเทล
     elif val_str == "ปิดสต็อก":
         return "background-color: #e3f2fd; color: #0d47a1; font-weight: bold;"  # ฟ้า/น้ำเงินพาสเทล
-    return ""
+    return "background-color: #ffffff; color: #333333;"
+
+def render_html_table(df):
+    """สร้างตาราง HTML Custom ที่กำหนดหัวตารางดำเข้ม ตัวโต ชัดเจน 100%"""
+    html = """
+    <style>
+        .custom-roster-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .custom-roster-table th {
+            background-color: #e0e0e0 !important;
+            color: #000000 !important;
+            font-weight: 900 !important;
+            font-size: 16px !important;
+            padding: 12px 8px;
+            text-align: center;
+            border: 1px solid #cccccc;
+        }
+        .custom-roster-table td {
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 15px;
+            border: 1px solid #e0e0e0;
+        }
+        .custom-roster-table td.name-cell {
+            background-color: #ffffff;
+            color: #111111;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 12px;
+        }
+    </style>
+    <div style="overflow-x: auto;">
+    <table class="custom-roster-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+                <th>Sun</th>
+            </tr>
+        </thead>
+        <tbody>
+    """
+    
+    for _, row in df.iterrows():
+        html += "<tr>"
+        name_val = row.get("Name", "")
+        html += f'<td class="name-cell">{name_val}</td>'
+        
+        for day in DAYS_COLS:
+            val = row.get(day, "")
+            style = get_shift_style(val)
+            html += f'<td style="{style}">{val}</td>'
+        html += "</tr>"
+        
+    html += """
+        </tbody>
+    </table>
+    </div>
+    """
+    return html
 
 def clean_dataframe_types(df):
     """แปลงคอลัมน์วันให้เป็นข้อความ (String) ทั้งหมด"""
@@ -146,18 +197,9 @@ def load_data():
 # โหลดข้อมูลตารางงาน
 df_schedule = load_data()
 
-# ส่วนแสดงผลตารางงานสำหรับทุกคน
+# ส่วนแสดงผลตารางงานสำหรับทุกคน (ใช้ Custom HTML Table หัวตารางเข้ม ชัดเจน 100%)
 st.subheader("📋 ตารางกะงานปัจจุบัน")
-
-valid_days = [col for col in DAYS_COLS if col in df_schedule.columns]
-
-# แสดงสีตามสไตล์พาสเทล
-try:
-    styled_df = df_schedule.style.map(style_bg_only, subset=valid_days)
-except AttributeError:
-    styled_df = df_schedule.style.applymap(style_bg_only, subset=valid_days)
-
-st.dataframe(styled_df, use_container_width=True)
+st.markdown(render_html_table(df_schedule), unsafe_allow_html=True)
 
 st.divider()
 
