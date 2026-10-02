@@ -10,6 +10,26 @@ st.set_page_config(
     layout="wide"
 )
 
+# Custom CSS ตกแต่งส่วนหัวตาราง (Header) ให้เด่นชัด ชัดเจน
+st.markdown("""
+<style>
+    /* ปรับแต่งหัวตารางของ st.dataframe และ st.data_editor */
+    th[data-testid="stTableHttpHeaderCell"], 
+    div[data-testid="stHeaderCell"] span,
+    th div {
+        color: #111111 !important;
+        font-weight: 800 !important;
+        font-size: 16px !important;
+    }
+    
+    /* ปรับแต่งพื้นหลังส่วนหัวตาราง */
+    div[data-testid="stHeaderCell"] {
+        background-color: #f0f2f6 !important;
+        border-bottom: 2px solid #cccccc !important;
+    }
+</style>
+""", unsafe_allow_ascii=False, unsafe_allow_html=True)
+
 st.title("📅 ตารางทำงานประจำสัปดาห์ (Weekly Roster)")
 st.caption("ระบบดึงข้อมูลและอัปเดตตารางงานผ่าน GitHub")
 
@@ -31,8 +51,8 @@ DAYS_COLS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 # ข้อมูลตารางงานเริ่มต้น (สำรอง)
 DEFAULT_DATA = [
-    {"Name": "บอส", "Mon": "09.30", "Tue": "09.30", "Wed": "OFF", "Thu": "09.30", "Fri": "09.30", "Sat": "12.30", "Sun": "OFF"},
-    {"Name": "มิน", "Mon": "OFF", "Tue": "13.00", "Wed": "13.00", "Thu": "13.00", "Fri": "OFF", "Sat": "13.00", "Sun": "12.30"}
+    {"Name": "BOSS", "Mon": "09.30", "Tue": "09.30", "Wed": "OFF", "Thu": "09.30", "Fri": "09.30", "Sat": "12.30", "Sun": "OFF"},
+    {"Name": "MIN", "Mon": "OFF", "Tue": "13.00", "Wed": "13.00", "Thu": "13.00", "Fri": "OFF", "Sat": "13.00", "Sun": "12.30"}
 ]
 
 def style_bg_only(val):
@@ -49,11 +69,10 @@ def style_bg_only(val):
     return ""
 
 def clean_dataframe_types(df):
-    """แปลงคอลัมน์วันให้เป็นข้อความ (String) ทั้งหมด ป้องกันการแปลงเป็นตัวเลข Float"""
+    """แปลงคอลัมน์วันให้เป็นข้อความ (String) ทั้งหมด"""
     for col in DAYS_COLS:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
-            # ปรับกรณีหลุดเป็นเลขทศนิยมให้กลับมาเป็นฟอร์แมตเดิม
             df[col] = df[col].replace({"9.3": "09.30", "9.300000": "09.30", "13.0": "13.00", "13.000000": "13.00", "12.3": "12.30", "12.300000": "12.30"})
     return df
 
@@ -63,7 +82,6 @@ def save_data(df):
         st.warning("⚠️ ยังไม่ได้ตั้งค่า GIST_ID หรือ GITHUB_TOKEN ใน Secrets")
         return False
     
-    # ทำความสะอาดประเภทข้อมูลก่อนบันทึก
     df = clean_dataframe_types(df)
     
     url = f"https://api.github.com/gists/{GIST_ID}"
@@ -111,7 +129,6 @@ def load_data():
                     save_data(df_default)
                     return clean_dataframe_types(df_default)
                 
-                # บังคับอ่านคอลัมน์เป็น dtype=str ทั้งหมด
                 df = pd.read_json(io.StringIO(content), dtype=str)
                 return clean_dataframe_types(df)
             else:
