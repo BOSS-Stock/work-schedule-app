@@ -17,10 +17,19 @@ st.caption("ระบบดึงข้อมูลและอัปเดต�
 GIST_ID = st.secrets.get("GIST_ID", "").strip()
 GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", "").strip()
 
+# ตัวเลือกเวลาเข้างานสำหรับ Dropdown (อัปเดตตามที่บอสกำหนด)
+SHIFT_OPTIONS = [
+    "09.30",
+    "12.30",
+    "13.00",
+    "OFF",
+    "ปิดสต็อก"
+]
+
 # ข้อมูลตารางงานเริ่มต้น (สำรอง)
 DEFAULT_DATA = [
-    {"Name": "สมชาย", "Mon": "08:00 - 17:00", "Tue": "08:00 - 17:00", "Wed": "OFF", "Thu": "08:00 - 17:00", "Fri": "08:00 - 17:00", "Sat": "10:00 - 19:00", "Sun": "OFF"},
-    {"Name": "สมหญิง", "Mon": "OFF", "Tue": "13:00 - 22:00", "Wed": "13:00 - 22:00", "Thu": "13:00 - 22:00", "Fri": "OFF", "Sat": "13:00 - 22:00", "Sun": "10:00 - 19:00"}
+    {"Name": "บอส", "Mon": "09.30", "Tue": "09.30", "Wed": "OFF", "Thu": "09.30", "Fri": "09.30", "Sat": "12.30", "Sun": "OFF"},
+    {"Name": "มิน", "Mon": "OFF", "Tue": "13.00", "Wed": "13.00", "Thu": "13.00", "Fri": "OFF", "Sat": "13.00", "Sun": "12.30"}
 ]
 
 def save_data(df):
@@ -67,21 +76,14 @@ def load_data():
         res = requests.get(url, headers=headers, timeout=10)
         if res.status_code == 200:
             files = res.json().get("files", {})
-            
-            # ตรวจสอบว่ามีไฟล์ schedule.json ใน Gist หรือไม่
             if "schedule.json" in files:
                 content = files["schedule.json"]["content"].strip()
-                
-                # ถ้าไฟล์ว่าง หรือมีแค่ [] ให้สร้างข้อมูลเริ่มต้นส่งไปบันทึก
                 if not content or content == "[]":
                     df_default = pd.DataFrame(DEFAULT_DATA)
                     save_data(df_default)
                     return df_default
-                
-                # อ่าน JSON ผ่าน io.StringIO เพื่อป้องกัน Pandas มองเนื้อหาเป็นชื่อไฟล์
                 return pd.read_json(io.StringIO(content))
             else:
-                st.warning("⚠️ ไม่พบไฟล์ schedule.json ใน Gist ระบบกำลังสร้างไฟล์เริ่มต้นให้...")
                 df_default = pd.DataFrame(DEFAULT_DATA)
                 save_data(df_default)
                 return df_default
@@ -103,8 +105,22 @@ st.divider()
 
 # ส่วนแก้ไขตารางงาน (สำหรับผู้จัดการ)
 with st.expander("✏️ แก้ไข/อัปเดตตารางงาน (สำหรับผู้จัดการ)"):
+    
+    # กำหนดโครงสร้างคอลัมน์ให้เป็น Dropdown ตามรายการ SHIFT_OPTIONS
+    column_config = {
+        "Name": st.column_config.TextColumn("ชื่อพนักงาน", required=True),
+        "Mon": st.column_config.SelectboxColumn("Mon", options=SHIFT_OPTIONS, required=True),
+        "Tue": st.column_config.SelectboxColumn("Tue", options=SHIFT_OPTIONS, required=True),
+        "Wed": st.column_config.SelectboxColumn("Wed", options=SHIFT_OPTIONS, required=True),
+        "Thu": st.column_config.SelectboxColumn("Thu", options=SHIFT_OPTIONS, required=True),
+        "Fri": st.column_config.SelectboxColumn("Fri", options=SHIFT_OPTIONS, required=True),
+        "Sat": st.column_config.SelectboxColumn("Sat", options=SHIFT_OPTIONS, required=True),
+        "Sun": st.column_config.SelectboxColumn("Sun", options=SHIFT_OPTIONS, required=True),
+    }
+
     edited_df = st.data_editor(
         df_schedule,
+        column_config=column_config,
         num_rows="dynamic",
         use_container_width=True,
         key="schedule_editor"
@@ -113,7 +129,7 @@ with st.expander("✏️ แก้ไข/อัปเดตตารางงา
     if st.button("💾 บันทึกการเปลี่ยนแปลงไป GitHub", type="primary"):
         with st.spinner("กำลังบันทึกข้อมูลลง GitHub..."):
             if save_data(edited_df):
-                st.success("บันทึกตารางงานเรียบร้อยแล้ว! ข้อมูลจะอัปเดตให้น้องๆ เห็นทันที")
+                st.success("บันทึกตารางงานเรียบร้อยแล้ว!")
                 st.rerun()
             else:
-                st.error("บันทึกไม่สำเร็จ กรุณาตรวจสอบ GIST_ID และ GITHUB_TOKEN ใน Secrets อีกครั้ง")
+                st.error("บันทึกไม่สำเร็จ กรุณาตรวจสอบ GIST_ID และ GITHUB_TOKEN อีกครั้ง")
