@@ -32,16 +32,16 @@ DEFAULT_DATA = [
     {"Name": "มิน", "Mon": "OFF", "Tue": "13.00", "Wed": "13.00", "Thu": "13.00", "Fri": "OFF", "Sat": "13.00", "Sun": "12.30"}
 ]
 
-def style_shifts(val):
-    """ฟังก์ชันสำหรับกำหนดสีพื้นหลังของแต่ละช่องตามกะงาน"""
+def style_bg_only(val):
+    """เปลี่ยนเฉพาะสีพื้นหลังของช่องกะเวลา"""
     if val == "09.30":
-        return "background-color: #d4edda; color: #155724; font-weight: bold;" # สีเขียว
+        return "background-color: #2e7d32; color: #ffffff; font-weight: bold;"  # เขียว
     elif val in ["12.30", "13.00"]:
-        return "background-color: #fff3cd; color: #856404; font-weight: bold;" # สีเหลือง
+        return "background-color: #f57f17; color: #ffffff; font-weight: bold;"  # เหลืองทอง/ส้มเหลือง
     elif val == "OFF":
-        return "background-color: #f8d7da; color: #721c24; font-weight: bold;" # สีแดง
+        return "background-color: #c62828; color: #ffffff; font-weight: bold;"  # แดง
     elif val == "ปิดสต็อก":
-        return "background-color: #cce5ff; color: #004085; font-weight: bold;" # สีน้ำเงิน
+        return "background-color: #1565c0; color: #ffffff; font-weight: bold;"  # น้ำเงิน
     return ""
 
 def save_data(df):
@@ -109,12 +109,14 @@ def load_data():
 # โหลดข้อมูลตารางงาน
 df_schedule = load_data()
 
-# ส่วนแสดงผลตารางงานสำหรับทุกคน (Read-only View แบบใส่สี)
+# ส่วนแสดงผลตารางงานสำหรับทุกคน (เน้นสีพื้นหลังเฉพาะช่องวัน Mon-Sun)
 st.subheader("📋 ตารางกะงานปัจจุบัน")
 
-# ปรับใช้สีพื้นหลังกับคอลัมน์วัน Mon-Sun
 days_cols = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-styled_df = df_schedule.style.applymap(style_shifts, subset=[col for col in days_cols if col in df_schedule.columns])
+valid_days = [col for col in days_cols if col in df_schedule.columns]
+
+# ใส่สีเฉพาะช่องกะเวลา (คอลัมน์ชื่อพนักงานจะเป็นสีปกติ)
+styled_df = df_schedule.style.applymap(style_bg_only, subset=valid_days)
 
 st.dataframe(styled_df, use_container_width=True)
 
@@ -123,7 +125,6 @@ st.divider()
 # ส่วนแก้ไขตารางงาน (สำหรับผู้จัดการ)
 with st.expander("✏️ แก้ไข/อัปเดตตารางงาน (สำหรับผู้จัดการ)"):
     
-    # กำหนดโครงสร้างคอลัมน์ให้เป็น Dropdown ตามรายการ SHIFT_OPTIONS
     column_config = {
         "Name": st.column_config.TextColumn("ชื่อพนักงาน", required=True),
         "Mon": st.column_config.SelectboxColumn("Mon", options=SHIFT_OPTIONS, required=True),
