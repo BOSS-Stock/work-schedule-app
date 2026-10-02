@@ -37,7 +37,7 @@ def style_bg_only(val):
     if val == "09.30":
         return "background-color: #2e7d32; color: #ffffff; font-weight: bold;"  # เขียว
     elif val in ["12.30", "13.00"]:
-        return "background-color: #f57f17; color: #ffffff; font-weight: bold;"  # เหลืองทอง/ส้มเหลือง
+        return "background-color: #f57f17; color: #ffffff; font-weight: bold;"  # เหลืองทอง
     elif val == "OFF":
         return "background-color: #c62828; color: #ffffff; font-weight: bold;"  # แดง
     elif val == "ปิดสต็อก":
@@ -109,14 +109,17 @@ def load_data():
 # โหลดข้อมูลตารางงาน
 df_schedule = load_data()
 
-# ส่วนแสดงผลตารางงานสำหรับทุกคน (เน้นสีพื้นหลังเฉพาะช่องวัน Mon-Sun)
+# ส่วนแสดงผลตารางงานสำหรับทุกคน
 st.subheader("📋 ตารางกะงานปัจจุบัน")
 
 days_cols = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 valid_days = [col for col in days_cols if col in df_schedule.columns]
 
-# ใส่สีเฉพาะช่องกะเวลา (คอลัมน์ชื่อพนักงานจะเป็นสีปกติ)
-styled_df = df_schedule.style.applymap(style_bg_only, subset=valid_days)
+# รองรับ Pandas เวอร์ชันใหม่ด้วย .map() และรองรับเวอร์ชันเก่าด้วย .applymap()
+try:
+    styled_df = df_schedule.style.map(style_bg_only, subset=valid_days)
+except AttributeError:
+    styled_df = df_schedule.style.applymap(style_bg_only, subset=valid_days)
 
 st.dataframe(styled_df, use_container_width=True)
 
