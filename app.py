@@ -35,6 +35,18 @@ DEFAULT_DATA = [
     {"Name": "MIN", "Mon": "OFF", "Tue": "13.00", "Wed": "13.00", "Thu": "13.00", "Fri": "OFF", "Sat": "13.00", "Sun": "12.30"}
 ]
 
+# สีพาสเทลประจำวันสำหรับหัวตาราง
+DAY_HEADER_COLORS = {
+    "Name": "background-color: #eeeeee; color: #212121;",
+    "Mon": "background-color: #fff9c4; color: #f57f17;",  # เหลือง
+    "Tue": "background-color: #f8bbd0; color: #c2185b;",  # ชมพู
+    "Wed": "background-color: #c8e6c9; color: #2e7d32;",  # เขียว
+    "Thu": "background-color: #ffe0b2; color: #e65100;",  # ส้ม
+    "Fri": "background-color: #bbdefb; color: #0d47a1;",  # ฟ้า
+    "Sat": "background-color: #e1bee7; color: #6a1b9a;",  # ม่วง
+    "Sun": "background-color: #ffcdd2; color: #b71c1c;"   # แดง
+}
+
 def get_shift_style(val):
     """ส่งคืนสไตล์ Inline CSS สีพาสเทลตามกะงาน"""
     val_str = str(val).strip()
@@ -49,7 +61,7 @@ def get_shift_style(val):
     return "background-color: #ffffff; color: #333333;"
 
 def render_html_table(df):
-    """สร้างตาราง HTML Custom ที่กำหนดหัวตารางดำเข้ม ตัวโต ชัดเจน 100%"""
+    """สร้างตาราง HTML Custom ที่กำหนดหัวตารางแยกสีตามวัน ชัดเจนและสบายตา"""
     html = """
     <style>
         .custom-roster-table {
@@ -57,18 +69,16 @@ def render_html_table(df):
             border-collapse: collapse;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
             border-radius: 8px;
             overflow: hidden;
         }
         .custom-roster-table th {
-            background-color: #e0e0e0 !important;
-            color: #000000 !important;
             font-weight: 900 !important;
             font-size: 16px !important;
             padding: 12px 8px;
             text-align: center;
-            border: 1px solid #cccccc;
+            border: 1px solid #d6d6d6;
         }
         .custom-roster-table td {
             padding: 12px 8px;
@@ -88,14 +98,15 @@ def render_html_table(df):
     <table class="custom-roster-table">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Mon</th>
-                <th>Tue</th>
-                <th>Wed</th>
-                <th>Thu</th>
-                <th>Fri</th>
-                <th>Sat</th>
-                <th>Sun</th>
+    """
+    
+    # วนลูปสร้างหัวตารางพร้อมใส่สีประจำวัน
+    headers = ["Name"] + DAYS_COLS
+    for h in headers:
+        style = DAY_HEADER_COLORS.get(h, "")
+        html += f'<th style="{style}">{h}</th>'
+        
+    html += """
             </tr>
         </thead>
         <tbody>
@@ -130,7 +141,7 @@ def clean_dataframe_types(df):
 def save_data(df):
     """ฟังก์ชันบันทึกข้อมูลตารางงานกลับไปยัง GitHub Gist"""
     if not GIST_ID or not GITHUB_TOKEN:
-        st.warning("⚠️ ยังไม่ได้ตั้งค่า GIST_ID หรือ GITHUB_TOKEN ใน Secrets")
+        st.warning("⚠️️ ยังไม่ได้ตั้งค่า GIST_ID หรือ GITHUB_TOKEN ใน Secrets")
         return False
     
     df = clean_dataframe_types(df)
@@ -197,7 +208,7 @@ def load_data():
 # โหลดข้อมูลตารางงาน
 df_schedule = load_data()
 
-# ส่วนแสดงผลตารางงานสำหรับทุกคน (ใช้ Custom HTML Table หัวตารางเข้ม ชัดเจน 100%)
+# ส่วนแสดงผลตารางงานสำหรับทุกคน (ใช้ Custom HTML Table หัวตารางแยกสีตามวัน)
 st.subheader("📋 ตารางกะงานปัจจุบัน")
 st.markdown(render_html_table(df_schedule), unsafe_allow_html=True)
 
