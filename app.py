@@ -10,25 +10,25 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS ตกแต่งส่วนหัวตาราง (Header) ให้เด่นชัด ชัดเจน
+# Custom CSS สำหรับปรับหัวตาราง (Header) ให้ตัวหนังสือเข้มและเด่นชัด
 st.markdown("""
 <style>
     /* ปรับแต่งหัวตารางของ st.dataframe และ st.data_editor */
     th[data-testid="stTableHttpHeaderCell"], 
     div[data-testid="stHeaderCell"] span,
     th div {
-        color: #111111 !important;
+        color: #000000 !important;
         font-weight: 800 !important;
         font-size: 16px !important;
     }
     
-    /* ปรับแต่งพื้นหลังส่วนหัวตาราง */
+    /* ปรับพื้นหลังส่วนหัวตารางให้เข้มขึ้นเล็กน้อย */
     div[data-testid="stHeaderCell"] {
-        background-color: #f0f2f6 !important;
-        border-bottom: 2px solid #cccccc !important;
+        background-color: #e0e0e0 !important;
+        border-bottom: 2px solid #999999 !important;
     }
 </style>
-""", unsafe_allow_ascii=False, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 st.title("📅 ตารางทำงานประจำสัปดาห์ (Weekly Roster)")
 st.caption("ระบบดึงข้อมูลและอัปเดตตารางงานผ่าน GitHub")
