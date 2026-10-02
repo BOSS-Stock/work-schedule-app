@@ -17,7 +17,7 @@ st.caption("ระบบดึงข้อมูลและอัปเดต�
 GIST_ID = st.secrets.get("GIST_ID", "").strip()
 GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", "").strip()
 
-# ตัวเลือกเวลาเข้างานสำหรับ Dropdown (อัปเดตตามที่บอสกำหนด)
+# ตัวเลือกเวลาเข้างานสำหรับ Dropdown
 SHIFT_OPTIONS = [
     "09.30",
     "12.30",
@@ -31,6 +31,18 @@ DEFAULT_DATA = [
     {"Name": "บอส", "Mon": "09.30", "Tue": "09.30", "Wed": "OFF", "Thu": "09.30", "Fri": "09.30", "Sat": "12.30", "Sun": "OFF"},
     {"Name": "มิน", "Mon": "OFF", "Tue": "13.00", "Wed": "13.00", "Thu": "13.00", "Fri": "OFF", "Sat": "13.00", "Sun": "12.30"}
 ]
+
+def style_shifts(val):
+    """ฟังก์ชันสำหรับกำหนดสีพื้นหลังของแต่ละช่องตามกะงาน"""
+    if val == "09.30":
+        return "background-color: #d4edda; color: #155724; font-weight: bold;" # สีเขียว
+    elif val in ["12.30", "13.00"]:
+        return "background-color: #fff3cd; color: #856404; font-weight: bold;" # สีเหลือง
+    elif val == "OFF":
+        return "background-color: #f8d7da; color: #721c24; font-weight: bold;" # สีแดง
+    elif val == "ปิดสต็อก":
+        return "background-color: #cce5ff; color: #004085; font-weight: bold;" # สีน้ำเงิน
+    return ""
 
 def save_data(df):
     """ฟังก์ชันบันทึกข้อมูลตารางงานกลับไปยัง GitHub Gist"""
@@ -97,9 +109,14 @@ def load_data():
 # โหลดข้อมูลตารางงาน
 df_schedule = load_data()
 
-# ส่วนแสดงผลตารางงานสำหรับทุกคน (Read-only View)
+# ส่วนแสดงผลตารางงานสำหรับทุกคน (Read-only View แบบใส่สี)
 st.subheader("📋 ตารางกะงานปัจจุบัน")
-st.dataframe(df_schedule, use_container_width=True)
+
+# ปรับใช้สีพื้นหลังกับคอลัมน์วัน Mon-Sun
+days_cols = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+styled_df = df_schedule.style.applymap(style_shifts, subset=[col for col in days_cols if col in df_schedule.columns])
+
+st.dataframe(styled_df, use_container_width=True)
 
 st.divider()
 
