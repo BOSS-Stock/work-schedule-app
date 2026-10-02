@@ -33,15 +33,15 @@ DEFAULT_DATA = [
 ]
 
 def style_bg_only(val):
-    """เปลี่ยนเฉพาะสีพื้นหลังของช่องกะเวลา"""
+    """กำหนดสีโทนพาสเทลตามรูปที่ 2"""
     if val == "09.30":
-        return "background-color: #2e7d32; color: #ffffff; font-weight: bold;"  # เขียว
+        return "background-color: #e8f5e9; color: #1b5e20; font-weight: bold;"  # เขียวพาสเทล
     elif val in ["12.30", "13.00"]:
-        return "background-color: #f57f17; color: #ffffff; font-weight: bold;"  # เหลืองทอง
+        return "background-color: #fffde7; color: #f57f17; font-weight: bold;"  # เหลืองพาสเทล
     elif val == "OFF":
-        return "background-color: #c62828; color: #ffffff; font-weight: bold;"  # แดง
+        return "background-color: #ffebee; color: #b71c1c; font-weight: bold;"  # แดงพาสเทล
     elif val == "ปิดสต็อก":
-        return "background-color: #1565c0; color: #ffffff; font-weight: bold;"  # น้ำเงิน
+        return "background-color: #e3f2fd; color: #0d47a1; font-weight: bold;"  # ฟ้า/น้ำเงินพาสเทล
     return ""
 
 def save_data(df):
@@ -56,7 +56,6 @@ def save_data(df):
         "Accept": "application/vnd.github+json"
     }
     
-    # แปลง DataFrame เป็น JSON String โดยรองรับภาษาไทย
     json_data = df.to_json(orient="records", indent=2, force_ascii=False)
     
     payload = {
@@ -115,7 +114,7 @@ st.subheader("📋 ตารางกะงานปัจจุบัน")
 days_cols = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 valid_days = [col for col in days_cols if col in df_schedule.columns]
 
-# รองรับ Pandas เวอร์ชันใหม่ด้วย .map() และรองรับเวอร์ชันเก่าด้วย .applymap()
+# แสดงสีตามสไตล์พาสเทล
 try:
     styled_df = df_schedule.style.map(style_bg_only, subset=valid_days)
 except AttributeError:
