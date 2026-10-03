@@ -205,14 +205,14 @@ def load_data():
 # โหลดข้อมูลตารางงาน
 df_schedule = load_data()
 
-# ส่วนแสดงผลตารางงานสำหรับทุกคน (ใช้ Custom HTML Table ขอบหนาเข้ม)
+# ส่วนแสดงผลตารางงานสำหรับทุกคน
 st.subheader("📋 ตารางกะงานปัจจุบัน")
 st.markdown(render_html_table(df_schedule), unsafe_allow_html=True)
 
 st.divider()
 
-# ส่วนแก้ไขตารางงาน (สำหรับผู้จัดการ)
-with st.expander("✏️ แก้ไข/อัปเดตตารางงาน (สำหรับผู้จัดการ)"):
+# ส่วนแก้ไขตารางงาน
+with st.expander("✏️ แก้ไข/อัปเดตตารางงาน"):
     
     column_config = {
         "Name": st.column_config.TextColumn("ชื่อพนักงาน", required=True),
