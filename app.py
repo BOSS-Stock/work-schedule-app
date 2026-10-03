@@ -36,7 +36,7 @@ DEFAULT_DATA = [
 ]
 
 def get_shift_style(val):
-    """ส่งคืนสไตล์ Inline CSS สีพาสเทลตามกะงาน พร้อมเส้นขอบเข้มชัดเจน"""
+    """ส่งคืนสไตล์ Inline CSS สีพาสเทลตามกะงาน"""
     val_str = str(val).strip()
     if val_str in ["09.30", "9.30"]:
         return "background-color: #e8f5e9; color: #1b5e20; font-weight: bold;"  # เขียวพาสเทล
@@ -49,34 +49,39 @@ def get_shift_style(val):
     return "background-color: #ffffff; color: #333333;"
 
 def render_html_table(df):
-    """สร้างตาราง HTML Custom ปรับเส้นตารางให้หนาและเข้มคมชัดสำหรับจอคอมพิวเตอร์"""
+    """สร้างตาราง HTML Custom ที่เน้นขอบรอบนอกหนา 3px ดำเข้มชัดเจน 100%"""
     html = """
     <style>
+        .table-container {
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 2px;
+        }
         .custom-roster-table {
             width: 100%;
             border-collapse: collapse;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border: 3px solid #1f2937 !important; /* เส้นขอบรอบนอกหนา 3px สีดำเข้มขรึม */
+            outline: 3px solid #1f2937 !important; /* การันตีขอบนอกชัดเจนแน่นอน */
+            border-radius: 6px;
             overflow: hidden;
-            border: 2px solid #374151; /* เส้นขอบนอกสุดหนาเข้ม */
         }
         .custom-roster-table th {
-            background-color: #374151 !important;
+            background-color: #1f2937 !important;
             color: #ffffff !important;
             font-weight: 800 !important;
             font-size: 16px !important;
             padding: 12px 8px;
             text-align: center;
-            border: 1.5px solid #4b5563; /* เส้นแบ่งหัวตารางหนาเข้ม */
+            border: 1.5px solid #374151; /* เส้นแบ่งหัวตาราง */
             letter-spacing: 0.5px;
         }
         .custom-roster-table td {
             padding: 12px 8px;
             text-align: center;
             font-size: 15px;
-            border: 1.5px solid #9ca3af; /* เส้นแบ่งช่องตารางหนาและเข้มขึ้นชัดเจน */
+            border: 1.5px solid #6b7280; /* เส้นแบ่งช่องภายในสีเทากลางเข้ม */
         }
         .custom-roster-table td.name-cell {
             background-color: #ffffff;
@@ -84,10 +89,10 @@ def render_html_table(df):
             font-weight: bold;
             text-align: left;
             padding-left: 14px;
-            border-right: 2px solid #6b7280; /* เส้นคอลัมน์ชื่อหนาพิเศษสำหรับแบ่งสัดส่วน */
+            border-right: 2px solid #374151; /* เส้นกั้นคอลัมน์ชื่อพนักงานหนาพิเศษ */
         }
     </style>
-    <div style="overflow-x: auto;">
+    <div class="table-container" style="overflow-x: auto;">
     <table class="custom-roster-table">
         <thead>
             <tr>
@@ -200,7 +205,7 @@ def load_data():
 # โหลดข้อมูลตารางงาน
 df_schedule = load_data()
 
-# ส่วนแสดงผลตารางงานสำหรับทุกคน (ใช้ Custom HTML Table สไตล์สโมกขรึม เส้นเข้มคมชัด)
+# ส่วนแสดงผลตารางงานสำหรับทุกคน (ใช้ Custom HTML Table ขอบหนาเข้ม)
 st.subheader("📋 ตารางกะงานปัจจุบัน")
 st.markdown(render_html_table(df_schedule), unsafe_allow_html=True)
 
