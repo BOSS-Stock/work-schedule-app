@@ -49,61 +49,73 @@ def get_shift_style(val):
     return "background-color: #ffffff; color: #333333;"
 
 def render_html_table(df):
-    """สร้างตาราง HTML Custom ที่เน้นขอบรอบนอกหนา 3px ดำเข้มชัดเจน 100%"""
+    """สร้างตาราง HTML Custom ในอัตราส่วนจัตุรัส (Square Style 1:1) เหมาะสำหรับแคปส่ง LINE"""
     html = """
     <style>
-        .table-container {
+        .table-wrapper {
+            display: flex;
+            justify-content: center;
             width: 100%;
             margin-bottom: 20px;
-            padding: 2px;
+        }
+        .square-table-container {
+            width: 100%;
+            max-width: 650px; /* จำกัดความกว้างให้ได้สัดส่วนทรงจัตุรัสพอดีกับความสูง */
+            margin: 0 auto;
+            padding: 4px;
         }
         .custom-roster-table {
             width: 100%;
             border-collapse: collapse;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            border: 3px solid #1f2937 !important; /* เส้นขอบรอบนอกหนา 3px สีดำเข้มขรึม */
-            outline: 3px solid #1f2937 !important; /* การันตีขอบนอกชัดเจนแน่นอน */
+            box-shadow: 0 4px 14px rgba(0,0,0,0.22);
+            border: 3px solid #1f2937 !important;
+            outline: 3px solid #1f2937 !important;
             border-radius: 6px;
             overflow: hidden;
+            table-layout: fixed; /* ให้ทุกคอลัมน์กว้างเท่ากันเป๊ะๆ */
         }
         .custom-roster-table th {
             background-color: #1f2937 !important;
             color: #ffffff !important;
             font-weight: 800 !important;
             font-size: 16px !important;
-            padding: 12px 8px;
+            padding: 18px 4px; /* เพิ่มระยะแนวตั้งให้ได้ทรงสี่เหลี่ยมสมดุล */
             text-align: center;
-            border: 1.5px solid #374151; /* เส้นแบ่งหัวตาราง */
+            border: 1.5px solid #374151;
             letter-spacing: 0.5px;
         }
         .custom-roster-table td {
-            padding: 12px 8px;
+            padding: 20px 4px; /* ปรับช่องให้สูงกำลังดี แคปรูปออกมาทรงสวยจัตุรัสพอดี */
             text-align: center;
             font-size: 15px;
-            border: 1.5px solid #6b7280; /* เส้นแบ่งช่องภายในสีเทากลางเข้ม */
+            border: 1.5px solid #6b7280;
+            vertical-align: middle;
+            word-wrap: break-word;
         }
         .custom-roster-table td.name-cell {
             background-color: #ffffff;
             color: #111827;
             font-weight: bold;
-            text-align: left;
-            padding-left: 14px;
-            border-right: 2px solid #374151; /* เส้นกั้นคอลัมน์ชื่อพนักงานหนาพิเศษ */
+            text-align: center;
+            padding-left: 4px;
+            padding-right: 4px;
+            border-right: 2px solid #374151;
         }
     </style>
-    <div class="table-container" style="overflow-x: auto;">
+    <div class="table-wrapper">
+    <div class="square-table-container" style="overflow-x: auto;">
     <table class="custom-roster-table">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Mon</th>
-                <th>Tue</th>
-                <th>Wed</th>
-                <th>Thu</th>
-                <th>Fri</th>
-                <th>Sat</th>
-                <th>Sun</th>
+                <th style="width: 16%;">Name</th>
+                <th style="width: 12%;">Mon</th>
+                <th style="width: 12%;">Tue</th>
+                <th style="width: 12%;">Wed</th>
+                <th style="width: 12%;">Thu</th>
+                <th style="width: 12%;">Fri</th>
+                <th style="width: 12%;">Sat</th>
+                <th style="width: 12%;">Sun</th>
             </tr>
         </thead>
         <tbody>
@@ -123,6 +135,7 @@ def render_html_table(df):
     html += """
         </tbody>
     </table>
+    </div>
     </div>
     """
     return html
